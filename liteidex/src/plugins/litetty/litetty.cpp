@@ -18,13 +18,14 @@
 ** These rights are included in the file LGPL_EXCEPTION.txt in this package.
 **
 **************************************************************************/
-// Module: snippetmanager.cpp
+// Module: litetty.cpp
 // Creator: visualfc <visualfc@gmail.com>
 
-#include "snippetmanager.h"
-#include "snippet.h"
-#include <QFileInfo>
-#include <QDir>
+#include "litetty.h"
+#ifdef Q_OS_WIN
+#include "sockettty.h"
+#else
+#include "fifotty.h"
 //lite_memory_check_begin
 #if defined(WIN32) && defined(_MSC_VER) &&  defined(_DEBUG)
      #define _CRTDBG_MAP_ALLOC
@@ -34,54 +35,19 @@
      #define new DEBUG_NEW
 #endif
 //lite_memory_check_end
+#endif
 
-SnippetsManager::SnippetsManager(QObject *parent) :
-    LiteApi::ISnippetsManager(parent)
+LiteTty::LiteTty(QObject *parent) :
+    LiteApi::ILiteTty(parent)
 {
 }
 
-SnippetsManager::~SnippetsManager()
+LiteApi::ITty *LiteTty::createTty(QObject *parent) const
 {
-    qDeleteAll(m_snippetsList);
-}
-
-void SnippetsManager::addSnippetList(ISnippetList *snippets)
-{
-    m_snippetsList.append(snippets);
-}
-
-void SnippetsManager::removeSnippetList(ISnippetList *snippets)
-{
-    m_snippetsList.removeAll(snippets);
-}
-
-ISnippetList *SnippetsManager::findSnippetList(const QString &mimeType)
-{
-    foreach (ISnippetList *snippets, m_snippetsList) {
-        if (snippets->mimeType() == mimeType) {
-            return snippets;
-        }
-    }
+#ifdef Q_OS_WIN
+    return new SocketTty(parent);
+#else
+    //return new FiFoTty(parent);
     return 0;
-}
-
-QList<ISnippetList *> SnippetsManager::allSnippetList() const
-{
-    return m_snippetsList;
-}
-
-void SnippetsManager::load(const QString &path)
-{
-    QDir dir(path);
-    foreach (QFileInfo info, dir.entryInfoList(QDir::Dirs)) {
-        QString mimeType = m_liteApp->mimeTypeManager()->findMimeTypeBySuffix(info.fileName());
-        if (!mimeType.isEmpty()) {
-            ISnippetList *find = this->findSnippetList(mimeType);
-            if (!find) {
-                find = new SnippetList(mimeType);
-                this->addSnippetList(find);
-            }
-            ((SnippetList*)find)->appendPath(info.path());
-        }
-    }
+#endif
 }

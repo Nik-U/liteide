@@ -18,10 +18,12 @@
 ** These rights are included in the file LGPL_EXCEPTION.txt in this package.
 **
 **************************************************************************/
-// Module: snippet.cpp
+// Module: litettyplugin.cpp
 // Creator: visualfc <visualfc@gmail.com>
 
-#include "snippet.h"
+#include "litettyplugin.h"
+#include "litetty.h"
+#include <QtPlugin>
 //lite_memory_check_begin
 #if defined(WIN32) && defined(_MSC_VER) &&  defined(_DEBUG)
      #define _CRTDBG_MAP_ALLOC
@@ -32,69 +34,16 @@
 #endif
 //lite_memory_check_end
 
-QString Snippet::trigger() const
-{
-    return m_trigger;
-}
-
-void Snippet::setTrigger(const QString &trigger)
-{
-    m_trigger = trigger;
-}
-
-QString Snippet::content() const
-{
-    return m_content;
-}
-
-void Snippet::setContent(const QString &content)
-{
-    m_content = content;
-}
-
-
-SnippetList::SnippetList(const QString &mimeType) :
-    m_bLoad(false), m_mimeType(mimeType)
+LiteTtyPlugin::LiteTtyPlugin()
 {
 }
 
-SnippetList::~SnippetList()
+bool LiteTtyPlugin::load(LiteApi::IApplication *app)
 {
-    qDeleteAll(m_snippetList);
-}
-
-QString SnippetList::mimeType() const
-{
-    return m_mimeType;
-}
-
-bool SnippetList::load()
-{
-    if (m_bLoad) {
-        return true;
-    }
-    m_bLoad = true;
-
+    app->extension()->addObject("LiteApi.ILiteTty",new LiteTty(this));
     return true;
 }
 
-QList<LiteApi::ISnippet *> SnippetList::findSnippet(const QString &trigger, Qt::CaseSensitivity cs) const
-{
-    QList<LiteApi::ISnippet *> l;
-    foreach(LiteApi::ISnippet *snippet, m_snippetList) {
-        if (snippet->trigger().compare(trigger,cs) == 0){
-            l.append(snippet);
-        }
-    }
-    return l;
-}
-
-QList<LiteApi::ISnippet *> SnippetList::snippetList() const
-{
-    return m_snippetList;
-}
-
-void SnippetList::appendPath(const QString &path)
-{
-    m_pathList.append(path);
-}
+#if QT_VERSION < 0x050000
+Q_EXPORT_PLUGIN2(PluginFactory,PluginFactory)
+#endif

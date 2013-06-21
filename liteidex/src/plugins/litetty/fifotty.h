@@ -18,42 +18,33 @@
 ** These rights are included in the file LGPL_EXCEPTION.txt in this package.
 **
 **************************************************************************/
-// Module: processex.h
+// Module: fifotty.h
 // Creator: visualfc <visualfc@gmail.com>
 
-#ifndef LITEAPI_PROCESSEX_H
-#define LITEAPI_PROCESSEX_H
+#ifndef FIFOTTY_H
+#define FIFOTTY_H
 
-#include <QProcess>
-#include <QVariant>
+#include "litettyapi/litettyapi.h"
 
-class ProcessEx : public QProcess
+class QSocketNotifier;
+class FiFoTty : public LiteApi::ITty
 {
     Q_OBJECT
 public:
-    ProcessEx(QObject *parent);
-    ~ProcessEx();
-    void setUserData(int id, const QVariant &data);
-    QVariant userData(int id) const;
-    bool isRunning() const;
-    void startEx(const QString &cmd, const QString &args);
-    static bool startDetachedEx(const QString& cmd, const QStringList &args);
-signals:
-    void extOutput(const QByteArray &data,bool bError);
-    void extFinish(bool error,int code, QString msg);
-protected slots:
-    void slotStateChanged(QProcess::ProcessState);
-    void slotError(QProcess::ProcessError);
-    void slotFinished(int,QProcess::ExitStatus);
-    void slotReadOutput();
-    void slotReadError();
-public:
-    static QString exitStatusText(int code,QProcess::ExitStatus status);
-    static QString processErrorText(QProcess::ProcessError code);
+    FiFoTty(QObject *parent);
+    virtual ~FiFoTty();
+    virtual QString serverName() const;
+    virtual QString errorString() const;
+    virtual bool listen();
+    virtual void shutdown();
+    virtual void write(const QByteArray &data);
+public slots:
+    void bytesAvailable();
 protected:
-    QMap<int,QVariant> m_idVarMap;
-private:
-    bool m_suppressFinish;
+    QString m_serverPath;
+    int m_serverFd;
+    QSocketNotifier *m_serverNotifier;
+    QString m_errorString;
 };
 
-#endif // LITEAPI_PROCESSEX_H
+#endif // FIFOTTY_H

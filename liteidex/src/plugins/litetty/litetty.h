@@ -18,42 +18,19 @@
 ** These rights are included in the file LGPL_EXCEPTION.txt in this package.
 **
 **************************************************************************/
-// Module: processex.h
+// Module: litetty.h
 // Creator: visualfc <visualfc@gmail.com>
 
-#ifndef LITEAPI_PROCESSEX_H
-#define LITEAPI_PROCESSEX_H
+#ifndef LITETTY_H
+#define LITETTY_H
+#include <litettyapi/litettyapi.h>
 
-#include <QProcess>
-#include <QVariant>
-
-class ProcessEx : public QProcess
+class LiteTty : public LiteApi::ILiteTty
 {
     Q_OBJECT
 public:
-    ProcessEx(QObject *parent);
-    ~ProcessEx();
-    void setUserData(int id, const QVariant &data);
-    QVariant userData(int id) const;
-    bool isRunning() const;
-    void startEx(const QString &cmd, const QString &args);
-    static bool startDetachedEx(const QString& cmd, const QStringList &args);
-signals:
-    void extOutput(const QByteArray &data,bool bError);
-    void extFinish(bool error,int code, QString msg);
-protected slots:
-    void slotStateChanged(QProcess::ProcessState);
-    void slotError(QProcess::ProcessError);
-    void slotFinished(int,QProcess::ExitStatus);
-    void slotReadOutput();
-    void slotReadError();
-public:
-    static QString exitStatusText(int code,QProcess::ExitStatus status);
-    static QString processErrorText(QProcess::ProcessError code);
-protected:
-    QMap<int,QVariant> m_idVarMap;
-private:
-    bool m_suppressFinish;
+    explicit LiteTty(QObject *parent = 0);
+    virtual LiteApi::ITty* createTty(QObject *parent) const;
 };
 
-#endif // LITEAPI_PROCESSEX_H
+#endif // LITETTY_H

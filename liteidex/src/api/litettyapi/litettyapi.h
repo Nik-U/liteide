@@ -18,42 +18,55 @@
 ** These rights are included in the file LGPL_EXCEPTION.txt in this package.
 **
 **************************************************************************/
-// Module: processex.h
+// Module: litettyapi.h
 // Creator: visualfc <visualfc@gmail.com>
 
-#ifndef LITEAPI_PROCESSEX_H
-#define LITEAPI_PROCESSEX_H
+#ifndef __LITETTYAPI_H__
+#define __LITETTYAPI_H__
 
-#include <QProcess>
-#include <QVariant>
+#include "liteapi/liteapi.h"
+#include <QProcessEnvironment>
+#include <QDir>
 
-class ProcessEx : public QProcess
+namespace LiteApi {
+
+class ITty : public QObject
 {
     Q_OBJECT
 public:
-    ProcessEx(QObject *parent);
-    ~ProcessEx();
-    void setUserData(int id, const QVariant &data);
-    QVariant userData(int id) const;
-    bool isRunning() const;
-    void startEx(const QString &cmd, const QString &args);
-    static bool startDetachedEx(const QString& cmd, const QStringList &args);
+    ITty(QObject *parent = 0): QObject(parent) {}
+    virtual QString serverName() const = 0;
+    virtual QString errorString() const = 0;
+    virtual bool listen() = 0;
+    virtual void shutdown() = 0;
+    virtual void write(const QByteArray &data) = 0;
 signals:
-    void extOutput(const QByteArray &data,bool bError);
-    void extFinish(bool error,int code, QString msg);
-protected slots:
-    void slotStateChanged(QProcess::ProcessState);
-    void slotError(QProcess::ProcessError);
-    void slotFinished(int,QProcess::ExitStatus);
-    void slotReadOutput();
-    void slotReadError();
-public:
-    static QString exitStatusText(int code,QProcess::ExitStatus status);
-    static QString processErrorText(QProcess::ProcessError code);
-protected:
-    QMap<int,QVariant> m_idVarMap;
-private:
-    bool m_suppressFinish;
+    void byteDelivery(const QByteArray &data);
 };
 
-#endif // LITEAPI_PROCESSEX_H
+class ILiteTty : public QObject
+{
+public:
+    ILiteTty(QObject *parent) : QObject(parent) { }
+    virtual ITty* createTty(QObject *parent) const = 0;
+};
+
+inline ILiteTty *getLiteTty(LiteApi::IApplication* app)
+{
+    return LiteApi::findExtensionObject<ILiteTty*>(app,"LiteApi.ILiteTty");
+}
+
+inline ITty *createTty(LiteApi::IApplication *app,QObject *parent)
+{
+    ILiteTty *liteTty = getLiteTty(app);
+    if (liteTty) {
+        return liteTty->createTty(parent);
+    }
+    return 0;
+}
+
+} //namespace LiteApi
+
+
+#endif //__LITETTYAPI_H__
+

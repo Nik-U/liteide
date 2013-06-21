@@ -18,42 +18,39 @@
 ** These rights are included in the file LGPL_EXCEPTION.txt in this package.
 **
 **************************************************************************/
-// Module: processex.h
+// Module: litettyplugin.h
 // Creator: visualfc <visualfc@gmail.com>
 
-#ifndef LITEAPI_PROCESSEX_H
-#define LITEAPI_PROCESSEX_H
+#ifndef LITETTYPLUGIN_H
+#define LITETTYPLUGIN_H
 
-#include <QProcess>
-#include <QVariant>
+#include "litetty_global.h"
+#include "liteapi/liteapi.h"
 
-class ProcessEx : public QProcess
+class LiteTtyPlugin : public LiteApi::IPlugin
 {
-    Q_OBJECT
 public:
-    ProcessEx(QObject *parent);
-    ~ProcessEx();
-    void setUserData(int id, const QVariant &data);
-    QVariant userData(int id) const;
-    bool isRunning() const;
-    void startEx(const QString &cmd, const QString &args);
-    static bool startDetachedEx(const QString& cmd, const QStringList &args);
-signals:
-    void extOutput(const QByteArray &data,bool bError);
-    void extFinish(bool error,int code, QString msg);
-protected slots:
-    void slotStateChanged(QProcess::ProcessState);
-    void slotError(QProcess::ProcessError);
-    void slotFinished(int,QProcess::ExitStatus);
-    void slotReadOutput();
-    void slotReadError();
-public:
-    static QString exitStatusText(int code,QProcess::ExitStatus status);
-    static QString processErrorText(QProcess::ProcessError code);
-protected:
-    QMap<int,QVariant> m_idVarMap;
-private:
-    bool m_suppressFinish;
+    LiteTtyPlugin();
+    virtual bool load(LiteApi::IApplication *app);
 };
 
-#endif // LITEAPI_PROCESSEX_H
+class PluginFactory : public LiteApi::PluginFactoryT<LiteTtyPlugin>
+{
+    Q_OBJECT
+    Q_INTERFACES(LiteApi::IPluginFactory)
+#if QT_VERSION >= 0x050000
+    Q_PLUGIN_METADATA(IID "liteidex.LiteTtyPlugin")
+#endif
+public:
+    PluginFactory() {
+        m_info->setId("plugin/LiteTty");
+        m_info->setVer("x18");
+        m_info->setName("LiteTty");
+        m_info->setAnchor("visualfc");
+        m_info->setInfo("LiteIDE tty Util");
+        //m_info->appendDepend("plugin/liteenv");
+    }
+};
+
+
+#endif // LITETTYPLUGIN_H

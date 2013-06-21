@@ -3,18 +3,13 @@
 
 HelloPlugin::HelloPlugin()
 {
-    m_info->setId("plugin/Hello");
-    m_info->setName("Hello");
-    m_info->setAnchor("visualfc");
-    m_info->setInfo("Hello Plugin");
 }
 
-bool HelloPlugin::initWithApp(LiteApi::IApplication *app)
+bool HelloPlugin::load(LiteApi::IApplication *app)
 {
-    if (!LiteApi::IPlugin::initWithApp(app)) {
-        return false;
-    }
     return true;
 }
 
-Q_EXPORT_PLUGIN(PluginFactory)
+#if QT_VERSION < 0x050000
+Q_EXPORT_PLUGIN2(PluginFactory,PluginFactory)
+#endif
