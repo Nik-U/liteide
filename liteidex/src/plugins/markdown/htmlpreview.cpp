@@ -37,6 +37,7 @@
 #include <QFileDialog>
 #include <QStatusBar>
 #include <QToolTip>
+#include <QTimer>
 #ifndef QT_NO_PRINTER
 #include <QPrinter>
 #include <QPrintPreviewDialog>
@@ -61,6 +62,10 @@ HtmlPreview::HtmlPreview(LiteApi::IApplication *app,QObject *parent) :
     m_widget = new QWidget;
     m_htmlWidget = 0;
     m_bWebkit = false;
+
+    m_htmlUpdateTimer = new QTimer(this);
+    m_htmlUpdateTimer->setSingleShot(true);
+    m_htmlUpdateTimer->setInterval(500);
 
     m_cssMenu = new QMenu(tr("Page Style"));
     m_cssMenu->setIcon(QIcon("icon:/markdown/images/css.png"));
@@ -108,6 +113,7 @@ HtmlPreview::HtmlPreview(LiteApi::IApplication *app,QObject *parent) :
     connect(m_syncSwitchAct,SIGNAL(toggled(bool)),this,SLOT(toggledSyncSwitch(bool)));
     connect(m_syncScrollAct,SIGNAL(toggled(bool)),this,SLOT(toggledSyncScroll(bool)));
     connect(m_reloadAct,SIGNAL(triggered()),this,SLOT(reload()));
+    connect(m_htmlUpdateTimer,SIGNAL(timeout()),this,SLOT(htmlUpdate()));
 
     m_syncScrollAct->setChecked(m_liteApp->settings()->value("markdown/syncscroll",true).toBool());
     m_syncSwitchAct->setChecked(m_liteApp->settings()->value("markdown/syncswitch",true).toBool());
@@ -115,6 +121,7 @@ HtmlPreview::HtmlPreview(LiteApi::IApplication *app,QObject *parent) :
 
 HtmlPreview::~HtmlPreview()
 {
+    delete m_htmlUpdateTimer;
     QAction *act = m_cssActGroup->checkedAction();
     if (act != 0) {
         m_liteApp->settings()->setValue("markdown/css",act->text());
@@ -152,7 +159,8 @@ void HtmlPreview::appLoaded()
         m_bWebkit = false;
     }
 
-    connect(m_htmlWidget,SIGNAL(loadFinished(bool)),this,SLOT(loadFinished(bool)));
+    //connect(m_htmlWidget,SIGNAL(loadFinished(bool)),this,SLOT(loadFinished(bool)));
+    connect(m_htmlWidget,SIGNAL(contentsSizeChanged()),this,SLOT(htmlContentsSizeChanged()));
     connect(m_htmlWidget,SIGNAL(linkClicked(QUrl)),this,SLOT(linkClicked(QUrl)));
     connect(m_htmlWidget,SIGNAL(linkHovered(QUrl)),this,SLOT(linkHovered(QUrl)));
 
@@ -260,6 +268,11 @@ void HtmlPreview::currentEditorChanged(LiteApi::IEditor *editor)
 
 void HtmlPreview::contentsChanged()
 {
+    m_htmlUpdateTimer->start();
+}
+
+void HtmlPreview::htmlUpdate()
+{
     editorHtmlPrivew();
 }
 
@@ -319,10 +332,9 @@ void HtmlPreview::loadHtmlData(const QByteArray &data, const QByteArray &title, 
 {
     m_lastData = data;
 
-    int h = m_htmlWidget->scrollBarValue(Qt::Horizontal);
-    int v = m_htmlWidget->scrollBarValue(Qt::Vertical);
-    m_prevPos = QPoint(h,v);
-
+//    int h = m_htmlWidget->scrollBarValue(Qt::Horizontal);
+//    int v = m_htmlWidget->scrollBarValue(Qt::Vertical);
+//    m_prevPos = QPoint(h,v);
     if (mime == "text/html") {
         QTextCodec *codec = QTextCodec::codecForHtml(data,QTextCodec::codecForName("utf-8"));
         m_htmlWidget->setHtml(codec->toUnicode(data),QUrl::fromLocalFile(m_curEditor->filePath()));
@@ -486,4 +498,9 @@ void HtmlPreview::loadFinished(bool b)
         m_htmlWidget->setScrollBarValue(Qt::Horizontal,m_prevPos.x());
         m_htmlWidget->setScrollBarValue(Qt::Vertical,m_prevPos.y());
     }
+}
+
+void HtmlPreview::htmlContentsSizeChanged()
+{
+    this->syncScrollValue();
 }

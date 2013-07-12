@@ -22,6 +22,7 @@
 // Creator: visualfc <visualfc@gmail.com>
 
 #include "toolmainwindow.h"
+#include "liteapi/liteapi.h"
 #include <QToolBar>
 #include <QAction>
 #include <QActionGroup>
@@ -317,7 +318,7 @@ void ToolMainWindow::removeToolWindow(QAction *action)
     }
 }
 
-QAction *ToolMainWindow::addToolWindow(Qt::DockWidgetArea area, QWidget *widget, const QString &id, const QString &title, bool split, QList<QAction*> widgetActions)
+QAction *ToolMainWindow::addToolWindow(LiteApi::IApplication *app,Qt::DockWidgetArea area, QWidget *widget, const QString &id, const QString &title, bool split, QList<QAction*> widgetActions)
 {
     QMap<QString,InitToolSate>::iterator it = m_initIdStateMap.find(id);
     if (it != m_initIdStateMap.end()) {
@@ -343,9 +344,10 @@ QAction *ToolMainWindow::addToolWindow(Qt::DockWidgetArea area, QWidget *widget,
 
     int index = m_actStateMap.size();
     if (index <= 9) {
-        action->setText(QString("&%1: %2").arg(index).arg(title));
-        action->setToolTip(tr("\"%1\" Tool Window\tALT+%2").arg(title).arg(index));
-        action->setShortcut(QKeySequence(QString("ALT+%1").arg(index)));
+        action->setText(QString("%1: %2").arg(index).arg(title));
+        QKeySequence ks(LiteApi::UseMacShortcuts?QString("Ctrl+Alt+%1").arg(index):QString("Alt+%1").arg(index));
+        LiteApi::IActionContext *actionContext = app->actionManager()->getActionContext(app,"App");
+        actionContext->regAction(action,"ToolWindow_"+id,ks.toString());
     }
     m_actStateMap.insert(action,state);
 
