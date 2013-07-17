@@ -8,11 +8,12 @@
 class QWebView;
 class QToolBar;
 class QLineEdit;
-class WebkitBrowser : public QWidget
+class QProgressBar;
+class WebKitBrowser : public QWidget
 {
     Q_OBJECT
 public:
-    explicit WebkitBrowser(LiteApi::IApplication *app, QWidget *parent = 0);
+    explicit WebKitBrowser(LiteApi::IApplication *app, QWidget *parent = 0);
 public slots:
     void changeLocation();
     void adjustLocation();
@@ -21,11 +22,14 @@ public slots:
     void loadUrl(const QUrl &url);
     void linkHovered(const QString & link, const QString & title, const QString & textContent);
     void statusBarMessage(const QString &msg);
+    void loadStarted();
+    void loadProgress(int);
 protected:
     LiteApi::IApplication *m_liteApp;
     QToolBar *m_toolBar;
     QLineEdit *m_locationEdit;
     QWebView *m_view;
+    QProgressBar *m_progressBar;
 };
 
 #endif // WEBKITBROWSER_H
